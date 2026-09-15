@@ -1,0 +1,60 @@
+// Enveloppe #app de toute l'app (web/orientation.ts).
+// En paysage sur téléphone, elle pivote de ±90° pour rester dans l'axe du téléphone ;
+// tailles (--app-w, --app-h) et marges de sécurité (--safe-*) suivent la rotation.
+// Les éléments « position: fixed » qu'elle contient se placent par rapport à elle :
+// utiliser --app-w et --app-h au lieu de vw et vh.
+//
+// Utilisation : @use "../kit/styles/app"; (avant les autres styles)
+
+:root {
+	--safe-t: env(safe-area-inset-top, 0px);
+	--safe-r: env(safe-area-inset-right, 0px);
+	--safe-b: env(safe-area-inset-bottom, 0px);
+	--safe-l: env(safe-area-inset-left, 0px);
+}
+
+#app {
+	--app-w: 100vw;
+	--app-h: 100vh;
+	position: fixed;
+	inset: 0;
+	overflow: hidden;
+
+	&[data-rotation="-90"],
+	&[data-rotation="90"] {
+		inset: auto;
+		top: 50%;
+		left: 50%;
+		width: var(--app-w);
+		height: var(--app-h);
+	}
+
+	// Haut de l'app à gauche de l'écran.
+	&[data-rotation="-90"] {
+		--safe-t: env(safe-area-inset-left, 0px);
+		--safe-r: env(safe-area-inset-top, 0px);
+		--safe-b: env(safe-area-inset-right, 0px);
+		--safe-l: env(safe-area-inset-bottom, 0px);
+		transform: translate(-50%, -50%) rotate(-90deg);
+	}
+
+	// Haut de l'app à droite de l'écran.
+	&[data-rotation="90"] {
+		--safe-t: env(safe-area-inset-right, 0px);
+		--safe-r: env(safe-area-inset-bottom, 0px);
+		--safe-b: env(safe-area-inset-left, 0px);
+		--safe-l: env(safe-area-inset-top, 0px);
+		transform: translate(-50%, -50%) rotate(90deg);
+	}
+}
+
+// Hauteur visible sans les barres du navigateur, quand c'est pris en charge (hors rotation, où
+// --app-h est fixé en pixels par web/orientation.ts).
+@supports (height: 1svh) {
+	#app {
+		--app-h: 100svh;
+	}
+}
+
+// Défilement : « touch-action: pan-y » se lit par rapport à l'écran et bloquerait le défilement
+// quand #app est pivotée. Utiliser « manipulation » dans les zones qui défilent.

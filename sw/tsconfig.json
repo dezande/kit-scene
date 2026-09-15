@@ -1,0 +1,12 @@
+{
+	"extends": "../tsconfig.base.json",
+	"compilerOptions": {
+		"lib": ["es2022", "webworker"],
+		"module": "esnext",
+		"moduleResolution": "bundler",
+		"moduleDetection": "legacy",
+		"rootDir": ".",
+		"noEmit": true
+	},
+	"include": ["sw.ts"]
+}

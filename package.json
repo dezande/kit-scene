@@ -1,0 +1,17 @@
+{
+	"name": "kit-scene",
+	"private": true,
+	"description": "Code commun des accessoires de scène (PWA hors-ligne) : écran allumé, portrait, hors-ligne, build et tests",
+	"type": "module",
+	"engines": {
+		"node": ">=24"
+	},
+	"scripts": {
+		"test": "node --test \"tests/**/*.test.ts\"",
+		"typecheck": "tsc && tsc -p web && tsc -p sw"
+	},
+	"devDependencies": {
+		"@types/node": "^24.13.4",
+		"typescript": "^7.0.2"
+	}
+}
