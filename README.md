@@ -82,7 +82,7 @@ Après avoir cloné une app : `git submodule update --init`.
 ```sh
 npm install
 npm run typecheck   # node/, tests/, web/ (DOM) et sw/ (service worker)
-npm test            # calculs de rotation, stamp-build dans un dépôt git temporaire
+npm test            # rotation, stamp-build dans un dépôt git temporaire, check-dist, configuration, serveur local (adresses piégées comprises)
 ```
 
 Le comportement dans le navigateur (écran allumé, rotation, hors-ligne, mises à jour) est testé dans Chrome par les tests de bout en bout de chaque app.
