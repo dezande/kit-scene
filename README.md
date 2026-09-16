@@ -95,7 +95,7 @@ Un commit qui ne touche vraiment à rien (espaces, renommage sans effet) peut po
 
 La fusion se fait **par rebase seulement** : pas de commit de fusion, pas d'écrasement, l'historique de `main` reste une ligne droite de commits qui ont chacun été vérifiés. La branche doit en outre être **à jour avec `main`** avant la fusion, donc les tests qui autorisent le passage portent sur le code tel qu'il arrivera sur `main`, et non sur une version périmée.
 
-L'auto-merge est activé : `gh pr merge --auto --rebase` demande la fusion à l'avance, et GitHub la fait tout seul dès que la CI est verte — inutile de rester devant. Si `main` bouge entre-temps, la pull request redevient en retard : remettez-la sur `main` (`git pull --rebase origin main && git push --force-with-lease`, ou le bouton « Update branch »), la CI repasse et l'auto-merge reprend la main.
+L'auto-merge est activé : `gh pr merge --auto --rebase` demande la fusion à l'avance, et GitHub la fait tout seul dès que la CI est verte — inutile de rester devant. La branche est supprimée après la fusion par GitHub lui-même, donc même quand vous avez fermé le terminal. Si `main` bouge entre-temps, la pull request redevient en retard : remettez-la sur `main` (`git pull --rebase origin main && git push --force-with-lease`, ou le bouton « Update branch »), la CI repasse et l'auto-merge reprend la main.
 
 ```sh
 git switch -c ma-modification
@@ -103,7 +103,7 @@ git switch -c ma-modification
 git commit -am "Ce que j'ai fait"
 git push -u origin ma-modification
 gh pr create --fill
-gh pr merge --auto --rebase --delete-branch   # fusionne tout seul dès que la CI est verte
+gh pr merge --auto --rebase   # fusionne tout seul dès que la CI est verte, puis supprime la branche
 # si main a bougé entre-temps : se remettre dessus, la CI repasse sur le résultat
 git pull --rebase origin main && git push --force-with-lease
 ```
@@ -125,7 +125,7 @@ npm run typecheck && npm test && npm run check:changelog
 # et ajouter le lien « [1.1.0]: …/releases/tag/v1.1.0 » en bas, puis :
 git commit -am "Version 1.1.0"
 git push -u origin version-1.1.0 && gh pr create --fill
-gh pr merge --auto --rebase --delete-branch && gh pr checks --watch
+gh pr merge --auto --rebase && gh pr checks --watch
 
 git switch main && git pull
 git tag -a v1.1.0 -m "Version 1.1.0" && git push origin v1.1.0

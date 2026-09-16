@@ -22,6 +22,7 @@ Chaque version correspond à une étiquette git (`v1.0.0`) et à une publication
 - `main` protégée : poussée directe, poussée forcée et suppression refusées ; tout passe par une pull request dont le contrôle « Types, tests et journal » doit être vert, sans relecture exigée. La règle « rien ne change sans une ligne dans le journal » est donc appliquée, et non plus seulement constatée après coup.
 - Fusion par rebase seulement (ni commit de fusion ni écrasement) et branche obligatoirement à jour avec `main` : l'historique reste une ligne droite, et les tests qui autorisent la fusion portent sur le code tel qu'il arrivera sur `main`.
 - Auto-merge activé : `gh pr merge --auto --rebase` fait fusionner la pull request dès que la CI est verte, sans attendre devant l'écran ; le bouton « Update branch » est toujours proposé quand `main` a bougé.
+- Suppression automatique des branches après la fusion, faite par GitHub : `gh pr merge --delete-branch` ne supprimait rien quand la fusion arrivait plus tard, `gh` n'étant plus là pour le faire.
 - `.nvmrc` : version de Node figée (24) pour tout le monde, machines de développement comme CI (`node-version-file` dans le workflow, `engines` limité à Node 24).
 
 ## [1.0.0] — 2026-09-15
