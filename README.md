@@ -91,6 +91,17 @@ node node/check-changelog.ts --base main   # et : ai-je dit ce que je change ?
 
 Un commit qui ne touche vraiment à rien (espaces, renommage sans effet) peut porter `[sans journal]` dans son message pour en être dispensé.
 
+`main` est protégée : pas de poussée directe, pas de poussée forcée, pas de suppression. Tout passe par une pull request dont le contrôle « Types, tests et journal » doit être vert — c'est lui qui refuse un changement sans journal. Aucune relecture n'est exigée : vous fusionnez vous-même une fois la CI passée.
+
+```sh
+git switch -c ma-modification
+# … travailler, et écrire ce qu'on a fait sous « ## [Non publié] » …
+git commit -am "Ce que j'ai fait"
+git push -u origin ma-modification
+gh pr create --fill
+gh pr checks --watch && gh pr merge --squash --delete-branch
+```
+
 Une app s'accroche à une version nommée plutôt qu'à un commit quelconque :
 
 ```sh
@@ -99,15 +110,19 @@ git -C src/kit checkout v1.0.0
 git commit -am "Kit v1.0.0"
 ```
 
-**Publier une nouvelle version du kit** (depuis le kit, sur `main` à jour et vérifié) :
+**Publier une nouvelle version du kit.** La version se prépare dans une pull request comme le reste ; l'étiquette est posée ensuite sur `main`, où la protection ne s'applique pas aux étiquettes.
 
 ```sh
+git switch -c version-1.1.0
 npm run typecheck && npm test && npm run check:changelog
 # dans CHANGELOG.md : renommer « ## [Non publié] » en « ## [1.1.0] — 2026-09-16 »
 # et ajouter le lien « [1.1.0]: …/releases/tag/v1.1.0 » en bas, puis :
 git commit -am "Version 1.1.0"
-git tag -a v1.1.0 -m "Version 1.1.0"
-git push origin main --follow-tags
+git push -u origin version-1.1.0 && gh pr create --fill
+gh pr checks --watch && gh pr merge --squash --delete-branch
+
+git switch main && git pull
+git tag -a v1.1.0 -m "Version 1.1.0" && git push origin v1.1.0
 gh release create v1.1.0 --title "v1.1.0" --notes "Voir CHANGELOG.md."   # publication GitHub
 ```
 
