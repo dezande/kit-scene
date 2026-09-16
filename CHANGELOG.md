@@ -12,7 +12,7 @@ Les numéros suivent le [versionnage sémantique](https://semver.org/lang/fr/) :
 
 Chaque version correspond à une étiquette git (`v1.0.0`) et à une publication GitHub.
 
-## [Non publié]
+## [1.2.0] — 2026-09-16
 
 ### Ajouté
 
@@ -75,6 +75,7 @@ Mise en commun du code partagé par les accessoires de scène, jusque-là copié
 - `node/chrome.ts` : pilotage de Chrome sans interface pour les tests de bout en bout des apps.
 - Outillage : `tsconfig` séparés pour `node/`, `web/` (DOM) et `sw/` (service worker), `.editorconfig`, intégration continue GitHub Actions.
 
+[1.2.0]: https://github.com/dezande/kit-scene/releases/tag/v1.2.0
 [1.1.0]: https://github.com/dezande/kit-scene/releases/tag/v1.1.0
 [1.0.0]: https://github.com/dezande/kit-scene/releases/tag/v1.0.0
 [0.1.0]: https://github.com/dezande/kit-scene/releases/tag/v0.1.0
