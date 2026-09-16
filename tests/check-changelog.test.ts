@@ -239,3 +239,17 @@ test('journal sans numéro de build (le kit lui-même) : rien à vérifier', () 
 		rmSync(dir, { recursive: true, force: true });
 	}
 });
+
+test('une phrase qui parle de commits n\'est pas un numéro de build', () => {
+	const dir = makeAppRepo();
+	try {
+		// Le bon numéro en tête, et dans le texte une citation qui ressemble à un numéro.
+		const bavard = release(2).replace('- Publié.', "- On écrivait « — 25 commits » à la main, d'où l'erreur.");
+		writeFileSync(join(dir, 'CHANGELOG.md'), withBuild(bavard));
+		git(dir, 'commit', '-qam', 'Version 1.1.0');
+		const { ok, output } = check(dir, '--base', 'HEAD~1');
+		assert.equal(ok, true, output);
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
