@@ -67,6 +67,17 @@ git submodule add https://github.com/dezande/kit-scene.git src/kit
 
 **GitHub Actions** : `actions/checkout` avec `submodules: true` et `fetch-depth: 0`.
 
+## Règles de la branche main
+
+`main` est protégée dans le kit comme dans les apps :
+
+- **aucun push direct**, même pour le propriétaire : tout passe par une pull request ;
+- **historique linéaire** : fusion en rebase seulement (ni commit de fusion, ni squash) ;
+- **la CI doit être verte** pour fusionner, et la branche doit être à jour ;
+- la branche est supprimée après la fusion, et la fusion automatique (`--auto`) est autorisée.
+
+`npm run deploy` suit ces règles : il vérifie tout en local, ouvre la pull request, demande la fusion automatique en rebase, attend la CI puis la fusion, et suit enfin la mise en ligne.
+
 ## Mettre à jour le kit dans une app
 
 ```sh
