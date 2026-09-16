@@ -20,6 +20,7 @@ Pour les apps, rien à changer ; celles qui tiennent un journal peuvent lancer l
 
 ### Ajouté
 
+- `node/deploy.ts` publie par **pull request** : `main` est protégée (aucun push direct, historique linéaire, CI verte obligatoire), la pull request est créée puis fusionnée en rebase par la fusion automatique ; le script suit la CI, la fusion et la mise en ligne.
 - `node/check-changelog.ts` : vérifie le journal — versions numérotées, datées, en ordre décroissant, sans doublon, avec du contenu et un lien vers la publication — et, avec `--base <ref>`, qu'aucune modification n'arrive sans une ligne dans le journal.
 - `tests/check-changelog.test.ts` : chaque défaut de forme refusé avec sa raison ; dans un dépôt git temporaire, code modifié sans journal refusé, avec journal accepté, journal seul accepté, commit marqué `[sans journal]` accepté, base inconnue ignorée.
 - CI : étape « Journal des versions », sur `main` comme en pull request ; `npm run check:changelog` fait la même vérification en local.

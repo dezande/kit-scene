@@ -1,6 +1,6 @@
-// Déploiement : le déploiement lui-même est fait par GitHub Actions à chaque push
-// sur main. Ce script vérifie tout en local avant de pousser, pousse, puis suit
-// l'exécution jusqu'à la mise en ligne.
+// Déploiement. « main » est protégée : on n'y pousse pas directement, tout passe par une
+// pull request fusionnée en rebase quand la CI est verte. Ce script vérifie tout en local,
+// ouvre la pull request, attend la fusion, puis suit la mise en ligne.
 //
 // Usage (depuis la racine de l'app) : npm run deploy
 //         npm run deploy -- --dry-run   (vérifications, build et tests, sans push)
@@ -101,27 +101,56 @@ if (dryRun) {
 	process.exit(0);
 }
 
-/* ---------- 3. Push : GitHub Actions prend le relais ---------- */
-
-step('Push');
-run('git', ['push', '--quiet', 'origin', BRANCH]);
-const sha = output('git', ['rev-parse', 'HEAD']);
-console.log(`Poussé : ${sha.slice(0, 7)}`);
+/* ---------- 3. Pull request : la CI valide, la fusion en rebase publie ---------- */
 
 if (!hasCommand('gh')) {
-	console.log('\nGitHub CLI (gh) absent : suivez le déploiement dans l\'onglet Actions du dépôt.');
-	process.exit(0);
+	fail('GitHub CLI (gh) est nécessaire : « main » est protégée, la publication passe par une pull request.');
 }
 
-step('GitHub Actions');
+const localSha = output('git', ['rev-parse', 'HEAD']);
+const prBranch = `publication/${new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-')}-${localSha.slice(0, 7)}`;
+const title = output('git', ['log', '-1', '--pretty=%s']);
+const body = output('git', ['log', `origin/${BRANCH}..HEAD`, '--pretty=- %s']);
+
+step('Pull request');
+run('git', ['push', '--quiet', 'origin', `HEAD:refs/heads/${prBranch}`]);
+const prUrl = output('gh', ['pr', 'create', '--base', BRANCH, '--head', prBranch, '--title', title, '--body', body || title]);
+console.log(prUrl);
+// Fusion automatique dès que la CI est verte, puis suppression de la branche.
+run('gh', ['pr', 'merge', prBranch, '--rebase', '--auto', '--delete-branch']);
+
+step('CI de la pull request');
+const prRunId = await waitFor(async () => {
+	const id = output('gh', ['run', 'list', '--branch', prBranch, '--workflow', WORKFLOW, '--json', 'databaseId', '--jq', '.[0].databaseId']);
+	return id || null;
+}, 120_000, 3_000);
+if (prRunId) {
+	const watch = spawnSync('gh', ['run', 'watch', prRunId, '--exit-status', '--interval', '5'], { stdio: 'inherit' });
+	if (watch.status !== 0) fail(`La CI a échoué : rien n'est publié. Détails : gh run view ${prRunId} --log-failed`);
+}
+
+step('Fusion');
+const merged = await waitFor(async () => {
+	const state = output('gh', ['pr', 'view', prBranch, '--json', 'state', '--jq', '.state']);
+	if (state === 'CLOSED') fail(`Pull request fermée sans fusion : ${prUrl}`);
+	return state === 'MERGED' ? true : null;
+}, 300_000, 5_000);
+if (!merged) fail(`La pull request n'est pas fusionnée après 5 minutes : ${prUrl}`);
+// La fusion en rebase réécrit le commit : on reprend la version publiée.
+run('git', ['fetch', '--quiet', 'origin', BRANCH]);
+run('git', ['reset', '--hard', '--quiet', `origin/${BRANCH}`]);
+const sha = output('git', ['rev-parse', 'HEAD']);
+console.log(`Fusionné : ${sha.slice(0, 7)}`);
+
+step('Déploiement');
 const runId = await waitFor(async () => {
 	const id = output('gh', ['run', 'list', '--commit', sha, '--workflow', WORKFLOW, '--json', 'databaseId', '--jq', '.[0].databaseId']);
 	return id || null;
-}, 90_000, 3_000);
+}, 120_000, 3_000);
 if (!runId) fail('L\'exécution GitHub Actions n\'est pas apparue. Vérifiez l\'onglet Actions du dépôt.');
 
-const watch = spawnSync('gh', ['run', 'watch', runId, '--exit-status', '--interval', '5'], { stdio: 'inherit' });
-if (watch.status !== 0) fail(`La CI a échoué. Détails : gh run view ${runId} --log-failed`);
+const watchMain = spawnSync('gh', ['run', 'watch', runId, '--exit-status', '--interval', '5'], { stdio: 'inherit' });
+if (watchMain.status !== 0) fail(`Le déploiement a échoué. Détails : gh run view ${runId} --log-failed`);
 
 step('Vérification du site');
 const { homepage } = JSON.parse(readFileSync('package.json', 'utf8')) as { homepage: string };
