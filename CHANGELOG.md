@@ -19,6 +19,7 @@ Chaque version correspond à une étiquette git (`v1.0.0`) et à une publication
 - `node/check-changelog.ts` : vérifie le journal — versions numérotées, datées, en ordre décroissant, sans doublon, avec du contenu et un lien vers la publication — et, avec `--base <ref>`, qu'aucune modification n'arrive sans une ligne dans le journal.
 - `tests/check-changelog.test.ts` : chaque défaut de forme refusé avec sa raison ; dans un dépôt git temporaire, code modifié sans journal refusé, avec journal accepté, journal seul accepté, commit marqué `[sans journal]` accepté, base inconnue ignorée.
 - CI : étape « Journal des versions », sur `main` comme en pull request ; `npm run check:changelog` fait la même vérification en local.
+- `.nvmrc` : version de Node figée (24) pour tout le monde, machines de développement comme CI (`node-version-file` dans le workflow, `engines` limité à Node 24).
 
 ## [1.0.0] — 2026-09-15
 

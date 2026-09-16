@@ -4,10 +4,11 @@
 	"description": "Code commun des accessoires de scène (PWA hors-ligne) : écran allumé, portrait, hors-ligne, build et tests",
 	"type": "module",
 	"engines": {
-		"node": ">=24"
+		"node": ">=24 <25"
 	},
 	"scripts": {
 		"test": "node --test \"tests/**/*.test.ts\"",
+		"changelog": "node node/changelog.ts",
 		"typecheck": "tsc && tsc -p web && tsc -p sw",
 		"check:changelog": "node node/check-changelog.ts"
 	},
