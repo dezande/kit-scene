@@ -114,6 +114,8 @@ node node/check-changelog.ts --base main   # et : ai-je dit ce que je change ?
 
 Un commit qui ne touche vraiment à rien (espaces, renommage sans effet) peut porter `[sans journal]` dans son message pour en être dispensé.
 
+Un journal d'app donne souvent, pour chaque version, le **numéro de build** — le nombre de commits, celui que `node/stamp-build.ts` inscrit et que l'app affiche. Le commit qui publie la version, celui qui renomme « Non publié », compte lui aussi : le numéro lu avant de commiter est toujours en retard de un, et le tableau de correspondance ne retrouve alors plus la version depuis le numéro lu sur le téléphone. La vérification du journal s'en charge : au moment de publier, elle compare le numéro annoncé (« — 25 commits », et la ligne du tableau) à celui qu'aura vraiment le commit publié.
+
 C'est le contrôle « Types, tests et journal » de la pull request qui refuse un changement non expliqué : les [règles de la branche main](#règles-de-la-branche-main) le rendent obligatoire, donc la règle est appliquée et non pas seulement rappelée.
 
 Une app s'accroche à une version nommée plutôt qu'à un commit quelconque :

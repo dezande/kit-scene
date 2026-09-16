@@ -150,3 +150,92 @@ test('base inconnue (branche neuve, historique tronqué) : la forme est vérifi�
 		rmSync(dir, { recursive: true, force: true });
 	}
 });
+
+/** Journal d'app : un tableau de correspondance et un numéro de build par version. */
+const withBuild = (section: string): string => `# Journal des versions
+
+| Version | Commits | Date |
+| --- | --- | --- |
+${section.includes('1.1.0') ? '| [1.1.0] | 2 | 2026-09-16 |\n' : ''}| [1.0.0] | 1 | 2026-09-15 |
+
+${section}
+## [1.0.0] — 2026-09-15
+
+Commits [\`aaaaaaa\`](https://exemple.test/commit/aaaaaaa) — 1 commits
+
+- Le début.
+
+[1.1.0]: https://exemple.test/releases/tag/v1.1.0
+[1.0.0]: https://exemple.test/releases/tag/v1.0.0
+`;
+
+const UNRELEASED_SECTION = '## [Non publié]\n\n- Travail en cours.\n';
+const release = (build: number): string => `## [1.1.0] — 2026-09-16\n\nCommits [\`bbbbbbb\`](https://exemple.test/commit/bbbbbbb) — ${build} commits\n\n- Publié.\n`;
+
+/** Dépôt d'app prêt à publier : un journal à numéros de build, une version déjà publiée. */
+function makeAppRepo(): string {
+	const dir = mkdtempSync(join(tmpdir(), 'kit-scene-build-'));
+	git(dir, 'init', '-q', '-b', 'main');
+	writeFileSync(join(dir, 'CHANGELOG.md'), withBuild(UNRELEASED_SECTION));
+	writeFileSync(join(dir, 'code.ts'), 'export const a = 1;\n');
+	git(dir, 'add', '.');
+	git(dir, 'commit', '-q', '-m', 'départ');
+	return dir;
+}
+
+test('publication : le numéro de build annoncé doit être celui du commit publié', () => {
+	for (const [build, accepte] of [[2, true], [1, false]] as [number, boolean][]) {
+		const dir = makeAppRepo();
+		try {
+			writeFileSync(join(dir, 'CHANGELOG.md'), withBuild(release(build)));
+			git(dir, 'commit', '-qam', 'Version 1.1.0');
+			const { ok, output } = check(dir, '--base', 'HEAD~1');
+			assert.equal(ok, accepte, `${build} commits annoncés : ${output}`);
+			if (!accepte) {
+				assert.match(output, /1 commits annoncés, mais la version publiée en portera 2/);
+				assert.match(output, /le commit qui publie la version compte aussi/);
+			}
+		} finally {
+			rmSync(dir, { recursive: true, force: true });
+		}
+	}
+});
+
+test('publication : la ligne du tableau de correspondance est vérifiée aussi', () => {
+	const dir = makeAppRepo();
+	try {
+		writeFileSync(join(dir, 'CHANGELOG.md'), withBuild(release(2)).replace('| [1.1.0] | 2 |', '| [1.1.0] | 1 |'));
+		git(dir, 'commit', '-qam', 'Version 1.1.0');
+		const { ok, output } = check(dir, '--base', 'HEAD~1');
+		assert.equal(ok, false);
+		assert.match(output, /la ligne du tableau annonce 1 commits, mais la version publiée en portera 2/);
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+test("hors publication : le numéro d'une version déjà publiée n'est pas revérifié", () => {
+	const dir = makeAppRepo();
+	try {
+		// La 1.1.0 est publiée, puis la vie continue : son numéro ne bouge plus, même si HEAD avance.
+		writeFileSync(join(dir, 'CHANGELOG.md'), withBuild(release(2)));
+		git(dir, 'commit', '-qam', 'Version 1.1.0');
+		writeFileSync(join(dir, 'code.ts'), 'export const a = 2;\n');
+		writeFileSync(join(dir, 'CHANGELOG.md'), withBuild(`${UNRELEASED_SECTION}\n${release(2)}`));
+		git(dir, 'commit', '-qam', 'suite');
+		assert.equal(check(dir, '--base', 'HEAD~1').ok, true);
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+test('journal sans numéro de build (le kit lui-même) : rien à vérifier', () => {
+	const dir = makeRepo();
+	try {
+		writeFileSync(join(dir, 'CHANGELOG.md'), VALID.replace('## [Non publié]\n\n- Travail en cours.\n\n', '').replace('## [1.10.0] — 2026-09-16', '## [1.11.0] — 2026-09-17').replace('[1.10.0]: ', '[1.11.0]: https://exemple.test/releases/tag/v1.11.0\n[1.10.0]: '));
+		git(dir, 'commit', '-qam', 'Version 1.11.0');
+		assert.equal(check(dir, '--base', 'HEAD~1').ok, true);
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});

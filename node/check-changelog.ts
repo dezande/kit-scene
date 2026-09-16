@@ -2,7 +2,11 @@
 // 1. la forme : versions MAJEUR.MINEUR.CORRECTIF, datées, en ordre décroissant, sans doublon,
 //    avec du contenu et un lien vers la publication ; « Non publié » admis en tête, sans date ;
 // 2. la mise à jour : avec --base <ref>, toute modification autre que le journal lui-même doit
-//    s'accompagner d'une ligne dans le journal — un commit marqué « [sans journal] » en dispense.
+//    s'accompagner d'une ligne dans le journal — un commit marqué « [sans journal] » en dispense ;
+// 3. le numéro de build, pour les journaux qui en donnent un (« — 25 commits », et la ligne du
+//    tableau de correspondance) : au moment de publier une version, ce numéro doit être celui
+//    qu'aura le commit publié, le commit de publication compris. Sans cette vérification, on
+//    écrit le numéro lu avant de commiter, et l'app en affiche un autre.
 //
 // Usage : node node/check-changelog.ts [--base <ref>] [--head <ref>] [--file <chemin>]
 import { execFileSync } from 'node:child_process';
@@ -29,6 +33,19 @@ function git(args: string[]): string | null {
 	} catch {
 		return null;
 	}
+}
+
+/** Le numéro de build annoncé dans le corps d'une version (« — 25 commits »), s'il y en a un. */
+export function declaredBuild(body: string): number | null {
+	const match = /(\d+)\s+commits/.exec(body);
+	return match ? Number(match[1]) : null;
+}
+
+/** Le numéro de build de la ligne du tableau de correspondance (« | [1.2.0] | 25 | … »), s'il y en a une. */
+export function tableBuild(text: string, version: string): number | null {
+	const escaped = version.replaceAll('.', '\\.');
+	const match = new RegExp(`^\\|\\s*\\[${escaped}\\][^|]*\\|\\s*(\\d+)\\s*\\|`, 'm').exec(text);
+	return match ? Number(match[1]) : null;
 }
 
 /** Numéro de version comparable : 1.10.0 vient bien après 1.9.0. */
@@ -120,6 +137,39 @@ if (base && !/^0+$/.test(base)) {
 			problems.push(`${file} n'a pas changé alors que le reste a changé : ${list}.\n  Ajoutez ce que vous avez fait sous « ## [${UNRELEASED}] », ou marquez le commit « ${SKIP_MARKER} ».`);
 		} else if (changed.length > 0) {
 			console.log(`Journal à jour pour ${changed.length} fichier(s) modifié(s) depuis ${base}.`);
+		}
+	}
+}
+
+/* ---------- 3. Numéro de build de la version qu'on publie ---------- */
+
+// Le numéro affiché par l'app est le nombre de commits (node/stamp-build.ts). Le commit qui
+// renomme « Non publié » en numéro de version en ajoute un : si on écrit le numéro lu avant de
+// commiter, il manque toujours ce commit-là, et le tableau de correspondance ne retrouve plus
+// la version depuis le numéro affiché sur le téléphone. On ne vérifie qu'à la publication,
+// c'est-à-dire quand la version en tête n'existait pas encore dans la base comparée.
+if (base && !/^0+$/.test(base) && git(['rev-parse', '--verify', `${base}^{commit}`]) !== null) {
+	const text = readFileSync(file, 'utf8');
+	const newest = parseChangelog(text).entries.find((entry) => entry.version !== UNRELEASED);
+	const before = git(['show', `${base}:${file}`]);
+	const isNew = newest !== undefined && before !== null && !new RegExp(`^## \\[?${newest.version.replaceAll('.', '\\.')}\\]?[\\s—-]`, 'm').test(before);
+
+	if (newest && isNew) {
+		const declared = declaredBuild(newest.body);
+		const inTable = tableBuild(text, newest.version);
+		if (declared !== null || inTable !== null) {
+			// Le rebase aplatit la branche sur la base : le commit publié portera les commits de
+			// la base plus ceux de la branche (le commit de fusion technique de GitHub excepté).
+			const baseCount = Number(git(['rev-list', '--count', base]));
+			const added = Number(git(['rev-list', '--count', '--no-merges', `${base}..${head}`]));
+			const expected = baseCount + added;
+			const explain = `le commit qui publie la version compte aussi, c'est le numéro que l'app affichera`;
+			if (declared !== null && declared !== expected) {
+				problems.push(`version ${newest.version} : ${declared} commits annoncés, mais la version publiée en portera ${expected} (${explain}).`);
+			}
+			if (inTable !== null && inTable !== expected) {
+				problems.push(`version ${newest.version} : la ligne du tableau annonce ${inTable} commits, mais la version publiée en portera ${expected} (${explain}).`);
+			}
 		}
 	}
 }
