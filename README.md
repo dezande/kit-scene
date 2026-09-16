@@ -77,6 +77,31 @@ npm run deploy
 
 Après avoir cloné une app : `git submodule update --init`.
 
+## Versions
+
+Chaque version publiée du kit porte une étiquette git (`v1.0.0`) et une publication GitHub ; les changements sont décrits dans [CHANGELOG.md](CHANGELOG.md).
+
+Une app peut donc s'accrocher à une version nommée plutôt qu'à un commit quelconque :
+
+```sh
+git -C src/kit fetch --tags
+git -C src/kit checkout v1.0.0
+git commit -am "Kit v1.0.0"
+```
+
+**Publier une nouvelle version du kit** (depuis le kit, sur `main` à jour et vérifié) :
+
+```sh
+npm run typecheck && npm test
+# ajouter la version en tête de CHANGELOG.md, puis :
+git commit -am "Version 1.1.0"
+git tag -a v1.1.0 -m "Version 1.1.0"
+git push origin main --follow-tags
+gh release create v1.1.0 --title "v1.1.0" --notes "Voir CHANGELOG.md."   # publication GitHub
+```
+
+Le numéro suit le [versionnage sémantique](https://semver.org/lang/fr/) : MAJEUR quand une app existante doit être adaptée, MINEUR pour un ajout, CORRECTIF pour une correction. Une app n'est jamais obligée de suivre : elle reste sur la version qu'elle a testée.
+
 ## Développer le kit
 
 ```sh
