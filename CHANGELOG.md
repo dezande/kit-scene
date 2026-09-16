@@ -12,6 +12,12 @@ Les numéros suivent le [versionnage sémantique](https://semver.org/lang/fr/) :
 
 Chaque version correspond à une étiquette git (`v1.0.0`) et à une publication GitHub.
 
+## [Non publié]
+
+### Ajouté
+
+- Vérification du **numéro de build** annoncé dans un journal d'app : au moment de publier une version, `node/check-changelog.ts` compare le numéro annoncé (« — 25 commits », et la ligne du tableau de correspondance) à celui qu'aura vraiment le commit publié. Le commit qui renomme « Non publié » en numéro de version compte lui aussi, si bien que le numéro lu avant de commiter est toujours en retard de un — l'erreur a été faite deux fois le jour même, sur les deux apps, et corrigée à la main. La vérification ne s'applique qu'à la publication, et seulement aux journaux qui donnent un tel numéro : celui du kit n'en a pas.
+
 ## [1.1.0] — 2026-09-16
 
 Le journal des versions devient une règle vérifiée : rien n'arrive sur `main` sans être expliqué ici.
