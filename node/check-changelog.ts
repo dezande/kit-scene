@@ -35,9 +35,12 @@ function git(args: string[]): string | null {
 	}
 }
 
-/** Le numéro de build annoncé dans le corps d'une version (« — 25 commits »), s'il y en a un. */
+/** Le numéro de build annoncé en tête d'une version (« … — 25 commits »), s'il y en a un.
+ *  Seule la première ligne de la section compte, et seulement en fin de ligne : une phrase qui
+ *  parle de commits au fil du texte n'est pas un numéro de build. */
 export function declaredBuild(body: string): number | null {
-	const match = /(\d+)\s+commits/.exec(body);
+	const first = body.split('\n').find((line) => line.trim() !== '');
+	const match = first ? /[—-]\s*(\d+)\s+commits\s*$/.exec(first.trim()) : null;
 	return match ? Number(match[1]) : null;
 }
 

@@ -16,7 +16,7 @@ Chaque version correspond à une étiquette git (`v1.0.0`) et à une publication
 
 ### Ajouté
 
-- Vérification du **numéro de build** annoncé dans un journal d'app : au moment de publier une version, `node/check-changelog.ts` compare le numéro annoncé (« — 25 commits », et la ligne du tableau de correspondance) à celui qu'aura vraiment le commit publié. Le commit qui renomme « Non publié » en numéro de version compte lui aussi, si bien que le numéro lu avant de commiter est toujours en retard de un — l'erreur a été faite deux fois le jour même, sur les deux apps, et corrigée à la main. La vérification ne s'applique qu'à la publication, et seulement aux journaux qui donnent un tel numéro : celui du kit n'en a pas.
+- Vérification du **numéro de build** annoncé dans un journal d'app : au moment de publier une version, `node/check-changelog.ts` compare le numéro annoncé (« — 25 commits », et la ligne du tableau de correspondance) à celui qu'aura vraiment le commit publié. Le commit qui renomme « Non publié » en numéro de version compte lui aussi, si bien que le numéro lu avant de commiter est toujours en retard de un — l'erreur a été faite deux fois le jour même, sur les deux apps, et corrigée à la main. La vérification ne s'applique qu'à la publication, et seulement aux journaux qui donnent un tel numéro : celui du kit n'en a pas. Le numéro n'est lu qu'en fin de première ligne de la section — une phrase qui parle de commits au fil du texte n'en est pas un, ce qui a d'abord fait échouer la publication de cette version-ci.
 
 ## [1.1.0] — 2026-09-16
 
