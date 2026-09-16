@@ -73,10 +73,22 @@ git submodule add https://github.com/dezande/kit-scene.git src/kit
 
 - **aucun push direct**, même pour le propriétaire : tout passe par une pull request ;
 - **historique linéaire** : fusion en rebase seulement (ni commit de fusion, ni squash) ;
-- **la CI doit être verte** pour fusionner, et la branche doit être à jour ;
+- **la CI doit être verte** pour fusionner, et la branche doit être à jour : les tests qui autorisent le passage portent donc sur le code tel qu'il arrivera sur `main`, et non sur une version périmée ;
+- ni poussée forcée ni suppression de `main` ; aucune relecture exigée, la CI verte suffit ;
 - la branche est supprimée après la fusion, et la fusion automatique (`--auto`) est autorisée.
 
-`npm run deploy` suit ces règles : il vérifie tout en local, ouvre la pull request, demande la fusion automatique en rebase, attend la CI puis la fusion, et suit enfin la mise en ligne.
+`npm run deploy` suit ces règles : il vérifie tout en local, ouvre la pull request, demande la fusion automatique en rebase, attend la CI puis la fusion, et suit enfin la mise en ligne. À la main :
+
+```sh
+git switch -c ma-modification
+# … travailler, et écrire ce qu'on a fait sous « ## [Non publié] » du journal …
+git commit -am "Ce que j'ai fait"
+git push -u origin ma-modification
+gh pr create --fill
+gh pr merge --auto --rebase   # fusionne tout seul dès que la CI est verte, puis supprime la branche
+# si main a bougé entre-temps : se remettre dessus, la CI repasse sur le résultat
+git pull --rebase origin main && git push --force-with-lease
+```
 
 ## Mettre à jour le kit dans une app
 
@@ -102,22 +114,7 @@ node node/check-changelog.ts --base main   # et : ai-je dit ce que je change ?
 
 Un commit qui ne touche vraiment à rien (espaces, renommage sans effet) peut porter `[sans journal]` dans son message pour en être dispensé.
 
-`main` est protégée : pas de poussée directe, pas de poussée forcée, pas de suppression. Tout passe par une pull request dont le contrôle « Types, tests et journal » doit être vert — c'est lui qui refuse un changement sans journal. Aucune relecture n'est exigée : vous fusionnez vous-même une fois la CI passée.
-
-La fusion se fait **par rebase seulement** : pas de commit de fusion, pas d'écrasement, l'historique de `main` reste une ligne droite de commits qui ont chacun été vérifiés. La branche doit en outre être **à jour avec `main`** avant la fusion, donc les tests qui autorisent le passage portent sur le code tel qu'il arrivera sur `main`, et non sur une version périmée.
-
-L'auto-merge est activé : `gh pr merge --auto --rebase` demande la fusion à l'avance, et GitHub la fait tout seul dès que la CI est verte — inutile de rester devant. La branche est supprimée après la fusion par GitHub lui-même, donc même quand vous avez fermé le terminal. Si `main` bouge entre-temps, la pull request redevient en retard : remettez-la sur `main` (`git pull --rebase origin main && git push --force-with-lease`, ou le bouton « Update branch »), la CI repasse et l'auto-merge reprend la main.
-
-```sh
-git switch -c ma-modification
-# … travailler, et écrire ce qu'on a fait sous « ## [Non publié] » …
-git commit -am "Ce que j'ai fait"
-git push -u origin ma-modification
-gh pr create --fill
-gh pr merge --auto --rebase   # fusionne tout seul dès que la CI est verte, puis supprime la branche
-# si main a bougé entre-temps : se remettre dessus, la CI repasse sur le résultat
-git pull --rebase origin main && git push --force-with-lease
-```
+C'est le contrôle « Types, tests et journal » de la pull request qui refuse un changement non expliqué : les [règles de la branche main](#règles-de-la-branche-main) le rendent obligatoire, donc la règle est appliquée et non pas seulement rappelée.
 
 Une app s'accroche à une version nommée plutôt qu'à un commit quelconque :
 
