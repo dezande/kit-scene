@@ -20,6 +20,7 @@ Chaque version correspond à une étiquette git (`v1.0.0`) et à une publication
 - `tests/check-changelog.test.ts` : chaque défaut de forme refusé avec sa raison ; dans un dépôt git temporaire, code modifié sans journal refusé, avec journal accepté, journal seul accepté, commit marqué `[sans journal]` accepté, base inconnue ignorée.
 - CI : étape « Journal des versions », sur `main` comme en pull request ; `npm run check:changelog` fait la même vérification en local.
 - `main` protégée : poussée directe, poussée forcée et suppression refusées ; tout passe par une pull request dont le contrôle « Types, tests et journal » doit être vert, sans relecture exigée. La règle « rien ne change sans une ligne dans le journal » est donc appliquée, et non plus seulement constatée après coup.
+- Fusion par rebase seulement (ni commit de fusion ni écrasement) et branche obligatoirement à jour avec `main` : l'historique reste une ligne droite, et les tests qui autorisent la fusion portent sur le code tel qu'il arrivera sur `main`.
 - `.nvmrc` : version de Node figée (24) pour tout le monde, machines de développement comme CI (`node-version-file` dans le workflow, `engines` limité à Node 24).
 
 ## [1.0.0] — 2026-09-15
