@@ -11,11 +11,14 @@ permissions:
 
 jobs:
   check:
-    name: Types et tests
+    name: Types, tests et journal
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Historique complet : la vérification du journal compare avec la version précédente.
+          fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
           node-version: 24
@@ -25,3 +28,6 @@ jobs:
         run: npm run typecheck
       - name: Tests
         run: npm test
+      - name: Journal des versions
+        # Forme du journal, et sur main comme en pull request : rien ne change sans une ligne dedans.
+        run: node node/check-changelog.ts --base "${{ github.event.pull_request.base.sha || github.event.before }}"

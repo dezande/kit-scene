@@ -8,7 +8,8 @@
 	},
 	"scripts": {
 		"test": "node --test \"tests/**/*.test.ts\"",
-		"typecheck": "tsc && tsc -p web && tsc -p sw"
+		"typecheck": "tsc && tsc -p web && tsc -p sw",
+		"check:changelog": "node node/check-changelog.ts"
 	},
 	"devDependencies": {
 		"@types/node": "^24.13.4",

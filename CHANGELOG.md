@@ -12,6 +12,14 @@ Les numéros suivent le [versionnage sémantique](https://semver.org/lang/fr/) :
 
 Chaque version correspond à une étiquette git (`v1.0.0`) et à une publication GitHub.
 
+## [Non publié]
+
+### Ajouté
+
+- `node/check-changelog.ts` : vérifie le journal — versions numérotées, datées, en ordre décroissant, sans doublon, avec du contenu et un lien vers la publication — et, avec `--base <ref>`, qu'aucune modification n'arrive sans une ligne dans le journal.
+- `tests/check-changelog.test.ts` : chaque défaut de forme refusé avec sa raison ; dans un dépôt git temporaire, code modifié sans journal refusé, avec journal accepté, journal seul accepté, commit marqué `[sans journal]` accepté, base inconnue ignorée.
+- CI : étape « Journal des versions », sur `main` comme en pull request ; `npm run check:changelog` fait la même vérification en local.
+
 ## [1.0.0] — 2026-09-15
 
 Première version stable : les deux apps publiées (Analyseur Q, Boule de cristal) peuvent s'y accrocher.

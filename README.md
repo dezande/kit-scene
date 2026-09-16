@@ -21,6 +21,7 @@ Aucune dépendance à l'exécution. TypeScript sert à vérifier les types ; cha
 | `styles/_app.scss` | Enveloppe `#app` et sa rotation, marges de sécurité |
 | `node/stamp-build.ts` | Fin du build : version, liste des fichiers en cache, nom du cache (empreinte du contenu, version comprise) |
 | `node/check-dist.ts` | Vérifie que le build est complet |
+| `node/check-changelog.ts` | Vérifie le journal des versions, et qu'aucune modification n'arrive sans une ligne dedans |
 | `node/serve.ts`, `node/static-server.ts` | Serveur local de `dist/` |
 | `node/deploy.ts` | Vérifie tout en local (kit publié compris), pousse, suit GitHub Actions et contrôle le site |
 | `node/chrome.ts` | Pilotage de Chrome sans interface pour les tests de bout en bout des apps |
@@ -81,7 +82,16 @@ Après avoir cloné une app : `git submodule update --init`.
 
 Chaque version publiée du kit porte une étiquette git (`v1.0.0`) et une publication GitHub ; les changements sont décrits dans [CHANGELOG.md](CHANGELOG.md).
 
-Une app peut donc s'accrocher à une version nommée plutôt qu'à un commit quelconque :
+**Rien ne change sans une ligne dans le journal.** Ce que vous faites s'écrit sous `## [Non publié]`, en tête du journal ; l'intégration continue le vérifie à chaque pull request et à chaque arrivée sur `main`, et refuse un changement qui ne s'explique pas :
+
+```sh
+npm run check:changelog   # forme du journal
+node node/check-changelog.ts --base main   # et : ai-je dit ce que je change ?
+```
+
+Un commit qui ne touche vraiment à rien (espaces, renommage sans effet) peut porter `[sans journal]` dans son message pour en être dispensé.
+
+Une app s'accroche à une version nommée plutôt qu'à un commit quelconque :
 
 ```sh
 git -C src/kit fetch --tags
@@ -92,8 +102,9 @@ git commit -am "Kit v1.0.0"
 **Publier une nouvelle version du kit** (depuis le kit, sur `main` à jour et vérifié) :
 
 ```sh
-npm run typecheck && npm test
-# ajouter la version en tête de CHANGELOG.md, puis :
+npm run typecheck && npm test && npm run check:changelog
+# dans CHANGELOG.md : renommer « ## [Non publié] » en « ## [1.1.0] — 2026-09-16 »
+# et ajouter le lien « [1.1.0]: …/releases/tag/v1.1.0 » en bas, puis :
 git commit -am "Version 1.1.0"
 git tag -a v1.1.0 -m "Version 1.1.0"
 git push origin main --follow-tags
@@ -107,7 +118,8 @@ Le numéro suit le [versionnage sémantique](https://semver.org/lang/fr/) : MAJE
 ```sh
 npm install
 npm run typecheck   # node/, tests/, web/ (DOM) et sw/ (service worker)
-npm test            # rotation, stamp-build dans un dépôt git temporaire, check-dist, configuration, serveur local (adresses piégées comprises)
+npm test            # rotation, stamp-build dans un dépôt git temporaire, check-dist, configuration, serveur local (adresses piégées comprises), journal des versions
+npm run check:changelog   # le journal lui-même
 ```
 
 Le comportement dans le navigateur (écran allumé, rotation, hors-ligne, mises à jour) est testé dans Chrome par les tests de bout en bout de chaque app.
