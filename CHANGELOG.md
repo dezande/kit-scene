@@ -12,18 +12,25 @@ Les numéros suivent le [versionnage sémantique](https://semver.org/lang/fr/) :
 
 Chaque version correspond à une étiquette git (`v1.0.0`) et à une publication GitHub.
 
-## [Non publié]
+## [1.1.0] — 2026-09-16
+
+Le journal des versions devient une règle vérifiée : rien n'arrive sur `main` sans être expliqué ici.
+Pour les apps, rien à changer ; celles qui tiennent un journal peuvent lancer le même contrôle avec
+`node src/kit/node/check-changelog.ts`.
 
 ### Ajouté
 
 - `node/check-changelog.ts` : vérifie le journal — versions numérotées, datées, en ordre décroissant, sans doublon, avec du contenu et un lien vers la publication — et, avec `--base <ref>`, qu'aucune modification n'arrive sans une ligne dans le journal.
 - `tests/check-changelog.test.ts` : chaque défaut de forme refusé avec sa raison ; dans un dépôt git temporaire, code modifié sans journal refusé, avec journal accepté, journal seul accepté, commit marqué `[sans journal]` accepté, base inconnue ignorée.
 - CI : étape « Journal des versions », sur `main` comme en pull request ; `npm run check:changelog` fait la même vérification en local.
+- `.nvmrc` : version de Node figée (24) pour tout le monde, machines de développement comme CI (`node-version-file` dans le workflow, `engines` limité à Node 24).
+
+### Modifié
+
 - `main` protégée : poussée directe, poussée forcée et suppression refusées ; tout passe par une pull request dont le contrôle « Types, tests et journal » doit être vert, sans relecture exigée. La règle « rien ne change sans une ligne dans le journal » est donc appliquée, et non plus seulement constatée après coup.
 - Fusion par rebase seulement (ni commit de fusion ni écrasement) et branche obligatoirement à jour avec `main` : l'historique reste une ligne droite, et les tests qui autorisent la fusion portent sur le code tel qu'il arrivera sur `main`.
 - Auto-merge activé : `gh pr merge --auto --rebase` fait fusionner la pull request dès que la CI est verte, sans attendre devant l'écran ; le bouton « Update branch » est toujours proposé quand `main` a bougé.
 - Suppression automatique des branches après la fusion, faite par GitHub : `gh pr merge --delete-branch` ne supprimait rien quand la fusion arrivait plus tard, `gh` n'étant plus là pour le faire.
-- `.nvmrc` : version de Node figée (24) pour tout le monde, machines de développement comme CI (`node-version-file` dans le workflow, `engines` limité à Node 24).
 
 ## [1.0.0] — 2026-09-15
 
@@ -60,5 +67,6 @@ Mise en commun du code partagé par les accessoires de scène, jusque-là copié
 - `node/chrome.ts` : pilotage de Chrome sans interface pour les tests de bout en bout des apps.
 - Outillage : `tsconfig` séparés pour `node/`, `web/` (DOM) et `sw/` (service worker), `.editorconfig`, intégration continue GitHub Actions.
 
+[1.1.0]: https://github.com/dezande/kit-scene/releases/tag/v1.1.0
 [1.0.0]: https://github.com/dezande/kit-scene/releases/tag/v1.0.0
 [0.1.0]: https://github.com/dezande/kit-scene/releases/tag/v0.1.0
