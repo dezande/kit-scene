@@ -31,6 +31,7 @@ Pour les apps, rien à changer ; celles qui tiennent un journal peuvent lancer l
 - `main` protégée : poussée directe, poussée forcée et suppression refusées ; tout passe par une pull request dont le contrôle « Types, tests et journal » doit être vert, sans relecture exigée. La règle « rien ne change sans une ligne dans le journal » est donc appliquée, et non plus seulement constatée après coup.
 - Fusion par rebase seulement (ni commit de fusion ni écrasement) et branche obligatoirement à jour avec `main` : l'historique reste une ligne droite, et les tests qui autorisent la fusion portent sur le code tel qu'il arrivera sur `main`.
 - Auto-merge activé : `gh pr merge --auto --rebase` fait fusionner la pull request dès que la CI est verte, sans attendre devant l'écran ; le bouton « Update branch » est toujours proposé quand `main` a bougé.
+- README : les règles de `main` sont dites à un seul endroit (« Règles de la branche main »), avec la marche à suivre à la main ; la section « Versions » ne parle plus que du journal et des publications.
 - Suppression automatique des branches après la fusion, faite par GitHub : `gh pr merge --delete-branch` ne supprimait rien quand la fusion arrivait plus tard, `gh` n'étant plus là pour le faire.
 
 ## [1.0.0] — 2026-09-15
