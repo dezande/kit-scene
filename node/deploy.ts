@@ -1,15 +1,21 @@
 // Déploiement. « main » est protégée : on n'y pousse pas directement, tout passe par une
-// pull request fusionnée en rebase quand la CI est verte. Ce script vérifie tout en local,
+// pull request fusionnée en rebase quand la CI est verte. Ce script vérifie l'app en local,
 // ouvre la pull request, attend la fusion, puis suit la mise en ligne.
 //
+// Les tests dans Chrome, longs, ne sont pas rejoués en local : la CI de la pull request les
+// lance et bloque la fusion si l'un d'eux échoue. « --complet » les relance ici quand même.
+//
 // Usage (depuis la racine de l'app) : npm run deploy
-//         npm run deploy -- --dry-run   (vérifications, build et tests, sans push)
+//         npm run deploy -- --complet   (avec les tests dans Chrome en local)
+//         npm run deploy -- --dry-run   (vérifications et build seulement, sans push)
 import { execFileSync, spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
 const BRANCH = 'main';
 const WORKFLOW = 'ci.yml';
 const dryRun = process.argv.includes('--dry-run');
+/** Rejouer les tests dans Chrome en local, en plus de la CI de la pull request. */
+const complet = process.argv.includes('--complet');
 
 function fail(message: string): never {
 	console.error(`\n✗ ${message}`);
@@ -78,7 +84,7 @@ if (!output('git', ['-C', 'src/kit', 'branch', '-r', '--contains', 'HEAD'])) {
 }
 console.log(`Kit ${output('git', ['-C', 'src/kit', 'rev-parse', '--short=7', 'HEAD'])}, publié.`);
 
-/* ---------- 2. Types, tests unitaires, build, tests dans Chrome ---------- */
+/* ---------- 2. Types, tests unitaires, build (et, avec --complet, tests dans Chrome) ---------- */
 
 try {
 	step('Vérification des types');
@@ -87,8 +93,12 @@ try {
 	run('npm', ['test', '--silent']);
 	step('Build');
 	run('npm', ['run', '--silent', 'build']);
-	step('Tests dans Chrome');
-	run('npm', ['run', '--silent', 'test:e2e']);
+	if (complet) {
+		step('Tests dans Chrome');
+		run('npm', ['run', '--silent', 'test:e2e']);
+	} else {
+		console.log('\nTests dans Chrome : laissés à la CI de la pull request (« --complet » pour les jouer ici).');
+	}
 } catch {
 	fail('Vérifications en échec : rien n\'a été poussé.');
 }
@@ -152,13 +162,20 @@ if (!runId) fail('L\'exécution GitHub Actions n\'est pas apparue. Vérifiez l\'
 const watchMain = spawnSync('gh', ['run', 'watch', runId, '--exit-status', '--interval', '5'], { stdio: 'inherit' });
 if (watchMain.status !== 0) fail(`Le déploiement a échoué. Détails : gh run view ${runId} --log-failed`);
 
+/*
+ * Le site sert-il bien ce qui vient d'être fusionné ? On compare le commit inscrit au build
+ * (kit/web/build.js) et non le nom du cache calculé avant la pull request : la fusion en rebase
+ * réécrit le commit, donc ce nom-là n'aurait jamais correspondu.
+ */
 step('Vérification du site');
 const { homepage } = JSON.parse(readFileSync('package.json', 'utf8')) as { homepage: string };
 const online = await waitFor(async () => {
-	const response = await fetch(new URL(`sw.js?t=${Date.now()}`, homepage), { cache: 'no-store' });
-	return response.ok && (await response.text()).includes(cacheName) ? true : null;
+	const response = await fetch(new URL(`kit/web/build.js?t=${Date.now()}`, homepage), { cache: 'no-store' });
+	if (!response.ok) return null;
+	const served = (await response.text()).match(/commit: '([^']+)'/)?.[1];
+	return served && sha.startsWith(served) ? true : null;
 }, 180_000, 5_000);
-if (!online) fail(`${homepage} ne sert pas encore ${cacheName} après 3 minutes. Revérifiez dans quelques minutes.`);
+if (!online) fail(`${homepage} ne sert pas encore le commit ${sha.slice(0, 7)} après 3 minutes. Revérifiez dans quelques minutes.`);
 
-console.log(`\n✓ En ligne : ${homepage} (${cacheName})`);
+console.log(`\n✓ En ligne : ${homepage} (commit ${sha.slice(0, 7)}, cache calculé au build)`);
 console.log('Sur le téléphone : ouvrez l\'app une fois avec du réseau, fermez-la et rouvrez-la.');

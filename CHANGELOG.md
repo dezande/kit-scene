@@ -12,6 +12,22 @@ Les numéros suivent le [versionnage sémantique](https://semver.org/lang/fr/) :
 
 Chaque version correspond à une étiquette git (`v1.0.0`) et à une publication GitHub.
 
+## [1.3.0] — 2026-09-22
+
+Le déploiement va deux fois plus vite et ne se trompe plus sur l'état du site. Pour les apps,
+rien à changer : `npm run deploy` s'utilise pareil.
+
+### Modifié
+
+- `node/deploy.ts` ne rejoue plus les **tests dans Chrome en local** : la CI de la pull request les
+  lance et bloque la fusion si l'un d'eux échoue, alors qu'ils prenaient plusieurs minutes avant
+  même d'avoir poussé quoi que ce soit. `npm run deploy -- --complet` les relance en local pour
+  qui veut tout voir passer avant d'ouvrir la pull request.
+- `node/deploy.ts` : la **vérification finale du site** compare le commit servi
+  (`kit/web/build.js`) et non le nom du cache calculé avant la pull request. La fusion en rebase
+  réécrit le commit, donc ce nom-là ne correspondait jamais : chaque déploiement réussi se
+  terminait par une erreur après trois minutes d'attente inutile.
+
 ## [1.2.0] — 2026-09-16
 
 ### Ajouté
@@ -75,6 +91,7 @@ Mise en commun du code partagé par les accessoires de scène, jusque-là copié
 - `node/chrome.ts` : pilotage de Chrome sans interface pour les tests de bout en bout des apps.
 - Outillage : `tsconfig` séparés pour `node/`, `web/` (DOM) et `sw/` (service worker), `.editorconfig`, intégration continue GitHub Actions.
 
+[1.3.0]: https://github.com/dezande/kit-scene/releases/tag/v1.3.0
 [1.2.0]: https://github.com/dezande/kit-scene/releases/tag/v1.2.0
 [1.1.0]: https://github.com/dezande/kit-scene/releases/tag/v1.1.0
 [1.0.0]: https://github.com/dezande/kit-scene/releases/tag/v1.0.0
