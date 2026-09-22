@@ -23,7 +23,7 @@ Aucune dépendance à l'exécution. TypeScript sert à vérifier les types ; cha
 | `node/check-dist.ts` | Vérifie que le build est complet |
 | `node/check-changelog.ts` | Vérifie le journal des versions, et qu'aucune modification n'arrive sans une ligne dedans |
 | `node/serve.ts`, `node/static-server.ts` | Serveur local de `dist/` |
-| `node/deploy.ts` | Vérifie tout en local (kit publié compris), pousse, suit GitHub Actions et contrôle le site |
+| `node/deploy.ts` | Vérifie l'app en local (kit publié compris), ouvre la pull request, suit GitHub Actions et contrôle le site |
 | `node/chrome.ts` | Pilotage de Chrome sans interface pour les tests de bout en bout des apps |
 
 ## Utiliser le kit dans une app
@@ -77,7 +77,7 @@ git submodule add https://github.com/dezande/kit-scene.git src/kit
 - ni poussée forcée ni suppression de `main` ; aucune relecture exigée, la CI verte suffit ;
 - la branche est supprimée après la fusion, et la fusion automatique (`--auto`) est autorisée.
 
-`npm run deploy` suit ces règles : il vérifie tout en local, ouvre la pull request, demande la fusion automatique en rebase, attend la CI puis la fusion, et suit enfin la mise en ligne. À la main :
+`npm run deploy` suit ces règles : il vérifie l'app en local (types, tests unitaires, build), ouvre la pull request, demande la fusion automatique en rebase, attend la CI puis la fusion, et suit enfin la mise en ligne. **Les tests dans Chrome, longs, sont laissés à la CI** de la pull request, qui bloque la fusion s'ils échouent ; `npm run deploy -- --complet` les rejoue aussi en local. À la main :
 
 ```sh
 git switch -c ma-modification
