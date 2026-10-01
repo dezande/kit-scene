@@ -34,6 +34,12 @@ sw.addEventListener('activate', (event) => {
 	);
 });
 
+/** L'adresse est-elle la page de l'app (son dossier, ou son index.html), et non une autre app du site ? */
+function isAppPage(url: URL): boolean {
+	const scope = new URL(sw.registration.scope).pathname;
+	return url.pathname === scope || url.pathname === `${scope}index.html`;
+}
+
 sw.addEventListener('fetch', (event) => {
 	const { request } = event;
 	if (request.method !== 'GET' || new URL(request.url).origin !== sw.location.origin) return;
@@ -42,7 +48,10 @@ sw.addEventListener('fetch', (event) => {
 		const cache = await caches.open(CACHE);
 		const cached = await cache.match(request, { ignoreSearch: true });
 		if (cached) return cached;
-		if (request.mode === 'navigate') {
+		// La page de l'app hors-ligne, mais seulement pour l'adresse de l'app elle-même : une app
+		// publiée à la racine du site (« Mes tours ») contrôle aussi les dossiers des autres apps,
+		// et leur renverrait sinon sa propre page au lieu de les laisser se charger.
+		if (request.mode === 'navigate' && isAppPage(new URL(request.url))) {
 			const shell = await cache.match('./index.html');
 			if (shell) return shell;
 		}

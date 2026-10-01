@@ -12,6 +12,12 @@ Les numéros suivent le [versionnage sémantique](https://semver.org/lang/fr/) :
 
 Chaque version correspond à une étiquette git (`v1.0.0`) et à une publication GitHub.
 
+## [1.3.1] — 2026-10-02
+
+### Corrigé
+
+- **Une app publiée à la racine du site ne prend plus la place des autres.** Hors-ligne, le service worker renvoyait la page de l'app pour toute navigation de son périmètre. À la racine de `dezande.github.io` (le lanceur « Mes tours »), ce périmètre couvre aussi les dossiers des autres apps : ouvrir un tour pour la première fois aurait affiché le lanceur à la place. La page de l'app n'est plus renvoyée que pour l'adresse de l'app elle-même (son dossier, ou son `index.html`) ; une autre adresse va au réseau, ou au service worker de l'app concernée. Rien ne change pour une app publiée dans son propre dossier, qui n'a qu'une page.
+
 ## [1.3.0] — 2026-09-22
 
 Le déploiement va deux fois plus vite et ne se trompe plus sur l'état du site. Pour les apps,
@@ -91,6 +97,7 @@ Mise en commun du code partagé par les accessoires de scène, jusque-là copié
 - `node/chrome.ts` : pilotage de Chrome sans interface pour les tests de bout en bout des apps.
 - Outillage : `tsconfig` séparés pour `node/`, `web/` (DOM) et `sw/` (service worker), `.editorconfig`, intégration continue GitHub Actions.
 
+[1.3.1]: https://github.com/dezande/kit-scene/releases/tag/v1.3.1
 [1.3.0]: https://github.com/dezande/kit-scene/releases/tag/v1.3.0
 [1.2.0]: https://github.com/dezande/kit-scene/releases/tag/v1.2.0
 [1.1.0]: https://github.com/dezande/kit-scene/releases/tag/v1.1.0
